@@ -1,46 +1,35 @@
 import sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import socket
+import socketserver
 
-
-ipaddr = socket.gethostbyname(socket.gethostname())
-
-class Serv(BaseHTTPRequestHandler):
-    def _set_response(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/html')
-        self.end_headers()
-
-    def do_GET(self):
-        self._set_response()
-        self.wfile.write("<html><body><h1>hi!</h1></body></html>".encode('utf-8'))
-
-    def do_HEAD(self):
-        self._set_response()
-
-    def do_POST(self):
-        # Doesn't do anything with posted data
-        self._set_response()
-        self.wfile.write("<html><body><h1>POST!</h1></body></html>".encode('utf-8'))
-        self.data_string = self.rfile.read(int(self.headers['Content-Length']))
-        print("post ::: "+str(self.data_string))
-
-
-if sys.argv[1:]:
-    port = int(sys.argv[1])
-else:
+if __name__ == "__main__":
     port = 8018
-server_address = (ipaddr, port)
+    ipaddr = socket.gethostbyname(socket.gethostname())
 
-Serv.protocol_version = "HTTP/1.0"
-httpd = HTTPServer(server_address, Serv)
+    address = (ipaddr,port)
 
-sa = httpd.socket.getsockname()
-print("Serving HTTP on", sa[0], "port", sa[1], "...")
-try:
-    httpd.serve_forever()
-except KeyboardInterrupt:
-    pass
+    print("Serwuje: ",ipaddr," port: ",port)
 
-httpd.server_close()
-print('Stopping httpd...\n')
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind(address)
+    server_socket.listen(5)
+
+    conn, address = server_socket.accept()
+    print("Connected to client at ", address)
+    # pick a large output buffer size because i dont necessarily know how big the incoming packet is
+
+    chunk = str("")
+
+    while True:
+        try:
+            output = conn.recv(2048);
+        except:
+            print("disconnected")
+            conn, address = server_socket.accept()
+            print("Connected to client at ", address)
+
+        print("Message received from client:")
+
+        print(output)
+
